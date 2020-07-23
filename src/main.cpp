@@ -49,22 +49,29 @@ int TAKE_ID = 0;
 // Which frame are we currently on?
 int FRAME_COUNT = 0;
 
-// Start a new take on device restart.
+// Update the TAKE_ID.
 void start_new_take() {
   TAKE_ID = EEPROM.read(0) + 1;
   EEPROM.write(0, TAKE_ID);
   EEPROM.commit();
 }
 
-void takePhotoTask(void *parameter) {
+// Continuously take the photo if IS_RECORDING flag is set.
+void continuouslyTakePhotoTask(void *parameter) {
   for (;;) {
     if (IS_RECORDING) {
       String photo_name = "take_" + String(TAKE_ID) + "_frame_" + String(FRAME_COUNT);
 
+      // Take the photo!
       esp_err_t err = take_photo(photo_name);
-      delay(100);
+      if (err != ESP_OK) {
+        // Nothing we can do.
+      }
 
       FRAME_COUNT++;
+
+      // Delay for the determined millisecond.
+      delay(DELAY_BETWEEN_FRAMES_MSEC);
     }
   }
 }
@@ -74,7 +81,7 @@ void create_photo_task() {
   int cpu_core = 1;
   int priority = 2;
 
-  xTaskCreatePinnedToCore(takePhotoTask, "CameraTask", heap, NULL, priority, &CameraTask, cpu_core);
+  xTaskCreatePinnedToCore(continuouslyTakePhotoTask, "CameraTask", heap, NULL, priority, &CameraTask, cpu_core);
 }
 
 void setup() {
@@ -82,11 +89,10 @@ void setup() {
 
   // Initialize the take ID from EEPROM.
   EEPROM.begin(EEPROM_SIZE);
-  start_new_take();
 
-  // Use red LED indicator and start at ON
+  // Use red LED indicator and start at OFF
   pinMode(RED_LED_PIN, OUTPUT);
-  led_on();
+  led_off();
 
   // Use flash LED and start at OFF
   pinMode(FLASH_LED_PIN, OUTPUT);
@@ -95,14 +101,39 @@ void setup() {
   // Disable brownout detector.
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
 
+  // Setup the built-in camera.
   esp_err_t err = setup_camera();
-  if (err != ESP_OK) panic();
+  if (err != ESP_OK) return panic();
 
-  // rtc_gpio_hold_en(GPIO_NUM_4);
-
+  // Run the photo task on separate core.
   create_photo_task();
+
+  // Set the LED to ON if everything looks good.
+  led_on();
+}
+
+void start_recording() {
+  start_new_take();
+  flash_on();
+
+  IS_RECORDING = true;
+}
+
+void stop_recording() {
+  flash_off();
+
+  IS_RECORDING = false;
+}
+
+void debug_simulate_signal_with_serial() {
+  if (Serial.available() > 0) {
+    int command = Serial.read();
+
+    Serial.print("I received: ");
+    Serial.println(command, DEC);
+  }
 }
 
 void loop() {
-  
+  debug_simulate_signal_with_serial();
 }
