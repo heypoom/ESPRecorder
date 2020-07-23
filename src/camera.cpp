@@ -88,13 +88,10 @@ esp_err_t take_photo(String file_name) {
   String path = "/" + file_name + ".jpg";
 
   fs::FS &fs = SD_MMC;
-  Serial.printf("Picture file name: %s\n", path.c_str());
 
   File file = fs.open(path.c_str(), FILE_WRITE);
 
   if (!file) {
-    Serial.println("Failed to open file in writing mode");
-
     file.close();
     esp_camera_fb_return(frame_buffer);
 
@@ -102,7 +99,6 @@ esp_err_t take_photo(String file_name) {
   }
 
   file.write(frame_buffer->buf, frame_buffer->len);
-  Serial.printf("Saved file to path: %s\n", path.c_str());
 
   file.close();
   esp_camera_fb_return(frame_buffer);
