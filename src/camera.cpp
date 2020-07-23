@@ -92,7 +92,7 @@ esp_err_t take_photo(String file_name) {
   }
 
   // Path where new picture will be saved in SD Card
-  String path = "/sdcard/" + file_name + ".jpg";
+  String path = "/" + file_name + ".jpg";
 
   fs::FS &fs = SD_MMC;
   File file = fs.open(path.c_str(), FILE_WRITE);
