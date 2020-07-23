@@ -36,3 +36,17 @@ void notify_warning() {
     delay(500);
   }
 }
+
+// Blink to notify the human operator that something is going on.
+// Lasts a second.
+void notify_status_blink() {
+  for (int i = 0; i < 10; i++) {
+    led_on();
+
+    delay(50);
+
+    led_off();
+
+    delay(50);
+  }
+}

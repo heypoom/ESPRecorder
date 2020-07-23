@@ -133,6 +133,7 @@ void start_recording() {
   flash_on();
 
   IS_RECORDING = true;
+  notify_status_blink();
 }
 
 void stop_recording() {
@@ -141,6 +142,7 @@ void stop_recording() {
   flash_off();
 
   IS_RECORDING = false;
+  notify_status_blink();
 }
 
 void debug_simulate_signal_with_serial() {
@@ -168,7 +170,7 @@ void read_gpio_signals() {
     return;
   }
 
-  int isStartRecordingSignal = digitalRead(PIN_STOP_RECORDING_SIGNAL);
+  int isStartRecordingSignal = digitalRead(PIN_START_RECORDING_SIGNAL);
 
   if (isStartRecordingSignal == HIGH) {
     start_recording();
@@ -176,7 +178,7 @@ void read_gpio_signals() {
 }
 
 void loop() {
-  // debug_simulate_signal_with_serial();
-  read_gpio_signals();
+  debug_simulate_signal_with_serial();
+  // read_gpio_signals();
   delay(10);
 }

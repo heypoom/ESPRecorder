@@ -58,7 +58,7 @@ esp_err_t setup_camera() {
     return ESP_FAIL;
   }
 
-  if (!SD_MMC.begin()) {
+  if (!SD_MMC.begin("/sdcard", true)) {
     Serial.println("SD Card Mount Failed");
 
     return ESP_FAIL;
@@ -92,10 +92,9 @@ esp_err_t take_photo(String file_name) {
   }
 
   // Path where new picture will be saved in SD Card
-  String path = "/" + file_name + ".jpg";
+  String path = "/sdcard/" + file_name + ".jpg";
 
   fs::FS &fs = SD_MMC;
-
   File file = fs.open(path.c_str(), FILE_WRITE);
 
   if (!file) {
