@@ -176,7 +176,7 @@ void read_gpio_signals() {
 }
 
 void loop() {
-  debug_simulate_signal_with_serial();
+  // debug_simulate_signal_with_serial();
   read_gpio_signals();
   delay(10);
 }
