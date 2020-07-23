@@ -130,9 +130,12 @@ void start_recording() {
   if (IS_RECORDING) return;
 
   start_new_take();
+
   flash_on();
+  led_on();
 
   IS_RECORDING = true;
+
   notify_status_blink();
 }
 
@@ -140,8 +143,10 @@ void stop_recording() {
   if (!IS_RECORDING) return;
 
   flash_off();
+  led_off();
 
   IS_RECORDING = false;
+
   notify_status_blink();
 }
 
