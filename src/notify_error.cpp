@@ -18,7 +18,7 @@ void notify_critical_error() {
 }
 
 // Notify the human operator then restart the device.
-void panic() {
+void notify_panic() {
   notify_critical_error();
   esp_restart();
 }

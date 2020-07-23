@@ -71,9 +71,6 @@ void continuouslyTakePhotoTask(void *parameter) {
       }
 
       FRAME_COUNT++;
-
-      // Delay for the determined millisecond.
-      delay(DELAY_BETWEEN_FRAMES_MSEC);
     } else {
       vTaskDelay(10 / portTICK_PERIOD_MS);
     }
@@ -115,7 +112,7 @@ void setup() {
 
   // Setup the built-in camera.
   esp_err_t err = setup_camera();
-  if (err != ESP_OK) return panic();
+  if (err != ESP_OK) notify_panic();
 
   // Run the photo task on separate core.
   create_photo_task();

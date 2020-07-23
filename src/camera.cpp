@@ -37,7 +37,8 @@ camera_config_t create_camera_config() {
     config.jpeg_quality = 10;
     config.fb_count = 2;
   } else {
-    // TODO: PSRAM is not found! Flash a warning.
+    notify_warning();
+
     config.frame_size = FRAMESIZE_SVGA;
     config.jpeg_quality = 12;
     config.fb_count = 1;
@@ -69,6 +70,12 @@ esp_err_t setup_camera() {
 
     return ESP_FAIL;
   }
+
+  sensor_t *sensor = esp_camera_sensor_get();
+
+  // Lower the saturation.
+  sensor->set_saturation(sensor, -2);
+  sensor->set_brightness(sensor, 0);
 
   return ESP_OK;
 }
