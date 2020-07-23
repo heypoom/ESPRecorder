@@ -106,9 +106,14 @@ void setup() {
   TIMERG0.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
   TIMERG0.wdt_feed = 1;
   TIMERG0.wdt_wprotect = 0;
+
   TIMERG1.wdt_wprotect = TIMG_WDT_WKEY_VALUE;
   TIMERG1.wdt_feed = 1;
   TIMERG1.wdt_wprotect = 0;
+
+  // Listen to GPIO pins for start and stop signal.
+  pinMode(PIN_START_RECORDING_SIGNAL, INPUT);
+  pinMode(PIN_STOP_RECORDING_SIGNAL, INPUT);
 
   // Setup the built-in camera.
   esp_err_t err = setup_camera();
@@ -122,6 +127,8 @@ void setup() {
 }
 
 void start_recording() {
+  if (IS_RECORDING) return;
+
   start_new_take();
   flash_on();
 
@@ -129,6 +136,8 @@ void start_recording() {
 }
 
 void stop_recording() {
+  if (!IS_RECORDING) return;
+
   flash_off();
 
   IS_RECORDING = false;
@@ -151,7 +160,23 @@ void debug_simulate_signal_with_serial() {
   }
 }
 
+void read_gpio_signals() {
+  int isStopRecordingSignal = digitalRead(PIN_STOP_RECORDING_SIGNAL);
+
+  if (isStopRecordingSignal == HIGH) {
+    stop_recording();
+    return;
+  }
+
+  int isStartRecordingSignal = digitalRead(PIN_STOP_RECORDING_SIGNAL);
+
+  if (isStartRecordingSignal == HIGH) {
+    start_recording();
+  }
+}
+
 void loop() {
   debug_simulate_signal_with_serial();
+  read_gpio_signals();
   delay(10);
 }
