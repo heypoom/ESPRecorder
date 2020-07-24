@@ -37,10 +37,6 @@
 #include "nvs_flash.h"
 #include "soc/cpu.h"
 
-// Task handle.
-TaskHandle_t CameraTask;
-TaskHandle_t SaveFrameTask;
-
 void start_new_take() {
   // Update the TAKE_ID.
   TAKE_ID = EEPROM.read(0) + 1;

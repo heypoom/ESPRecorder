@@ -13,5 +13,9 @@ int CAPTURED_FRAME_COUNT = 0;
 // How many frames have we processed?
 int PROCESSED_FRAME_COUNT = 0;
 
-// The shared list of frame-buffers.
-camera_fb_t *framebuffer_queue[FRAME_BUFFER_QUEUE_SIZE];
+// Task handles.
+TaskHandle_t CameraTask;
+TaskHandle_t SaveFrameTask;
+
+// Queue handle.
+QueueHandle_t framebuffer_queue;

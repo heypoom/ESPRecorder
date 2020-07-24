@@ -91,7 +91,7 @@ esp_err_t capture_frame() {
     return ESP_FAIL;
   }
 
-  framebuffer_queue[CAPTURED_FRAME_COUNT] = frame_buffer;
+  xQueueSend(framebuffer_queue, &frame_buffer, portMAX_DELAY);
   CAPTURED_FRAME_COUNT += 1;
 
   return ESP_OK;
@@ -99,32 +99,32 @@ esp_err_t capture_frame() {
 
 // Save the frame to disk.
 esp_err_t save_frame() {
-  int captured = CAPTURED_FRAME_COUNT;
+  camera_fb_t *frame_buffer = NULL;
 
-  while (captured > PROCESSED_FRAME_COUNT) {
-    String file_name = "take_" + String(TAKE_ID) + "_frame_" + String(CAPTURED_FRAME_COUNT);
-    camera_fb_t *frame_buffer = framebuffer_queue[PROCESSED_FRAME_COUNT];
+  // Path where new picture will be saved in SD Card
+  String file_name = "take_" + String(TAKE_ID) + "_frame_" + String(PROCESSED_FRAME_COUNT);
+  String path = "/" + file_name + ".jpg";
 
-    // Path where new picture will be saved in SD Card
-    String path = "/" + file_name + ".jpg";
+  if (xQueueReceive(framebuffer_queue, &frame_buffer, portMAX_DELAY) != pdPASS) return;
+  if (frame_buffer == NULL) return;
 
-    fs::FS &fs = SD_MMC;
-    File file = fs.open(path.c_str(), FILE_WRITE);
+  fs::FS &fs = SD_MMC;
+  File file = fs.open(path.c_str(), FILE_WRITE);
 
-    if (!file) {
-      file.close();
-      esp_camera_fb_return(frame_buffer);
-
-      return ESP_FAIL;
-    }
-
-    file.write(frame_buffer->buf, frame_buffer->len);
-
+  if (!file) {
     file.close();
     esp_camera_fb_return(frame_buffer);
 
-    PROCESSED_FRAME_COUNT += 1;
+    return ESP_FAIL;
   }
+
+  file.write(frame_buffer->buf, frame_buffer->len);
+  file.close();
+
+  esp_camera_fb_return(frame_buffer);
+  free(frame_buffer);
+
+  PROCESSED_FRAME_COUNT += 1;
 }
 
 // Take the photo.
