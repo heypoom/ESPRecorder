@@ -1,1 +1,1 @@
-void continuouslyTakePhotoTask(void *parameter);
+void captureFrameTask(void *parameter);

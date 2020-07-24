@@ -40,6 +40,7 @@
 
 // Task handle.
 TaskHandle_t CameraTask;
+TaskHandle_t SaveFrameTask;
 
 // Are we recording?
 int IS_RECORDING = false;
@@ -58,21 +59,31 @@ void start_new_take() {
   FRAME_COUNT = 0;
 }
 
-// Continuously take the photo if IS_RECORDING flag is set.
-void continuouslyTakePhotoTask(void *parameter) {
+// Continuously capture the frame if IS_RECORDING flag is set.
+void captureFrameTask(void *parameter) {
+  while (true) {
+    if (IS_RECORDING) {
+      flash_on();
+      esp_err_t err = capture_frame();
+
+      // FRAME_COUNT++;
+    } else {
+      vTaskDelay(10 / portTICK_PERIOD_MS);
+    }
+  }
+}
+
+void saveFrameToDiskTask(void *parameter) {
   while (true) {
     if (IS_RECORDING) {
       String photo_name = "take_" + String(TAKE_ID) + "_frame_" + String(FRAME_COUNT);
-
-      flash_on();
       led_on();
 
       auto start_time = 0;
-
       if (ENABLE_SERIAL_LOG) start_time = esp_timer_get_time();
 
-      // Take the photo!
-      esp_err_t err = take_photo(photo_name);
+      // From the current framebuffer, save the frame.
+      esp_err_t err = save_frame(photo_name);
       if (err != ESP_OK) {
         // Nothing we can do.
       }
@@ -81,7 +92,7 @@ void continuouslyTakePhotoTask(void *parameter) {
         auto end_time = esp_timer_get_time();
         auto capture_duration = ((int)(end_time / 1000) - (int)(start_time / 1000));
 
-        Serial.printf("Frame %d taken in %d ms\n", FRAME_COUNT, capture_duration);
+        Serial.printf("Frame %d saved in %d ms\n", FRAME_COUNT, capture_duration);
       }
 
       led_off();
@@ -92,12 +103,20 @@ void continuouslyTakePhotoTask(void *parameter) {
   }
 }
 
-void create_photo_task() {
-  int heap = 4096;
+void create_capture_frame_task() {
+  int heap = 2048;
   int cpu_core = 0;
   int priority = 2;
 
-  xTaskCreatePinnedToCore(continuouslyTakePhotoTask, "CameraTask", heap, NULL, priority, &CameraTask, cpu_core);
+  xTaskCreatePinnedToCore(captureFrameTask, "CameraTask", heap, NULL, priority, &CameraTask, cpu_core);
+}
+
+void create_save_frame_task() {
+  int heap = 2048;
+  int cpu_core = 0;
+  int priority = 3;
+
+  xTaskCreatePinnedToCore(saveFrameToDiskTask, "SaveFrameTask", heap, NULL, priority, &SaveFrameTask, cpu_core);
 }
 
 void setup() {
@@ -135,7 +154,8 @@ void setup() {
   if (err != ESP_OK) notify_panic();
 
   // Run the photo task on separate core.
-  create_photo_task();
+  create_capture_frame_task();
+  create_save_frame_task();
 
   // Set the LED to ON if everything looks good.
   led_on();
