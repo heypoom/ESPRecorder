@@ -68,7 +68,9 @@ void continuouslyTakePhotoTask(void *parameter) {
       flash_on();
       led_on();
 
-      auto start_time = esp_timer_get_time();
+      auto start_time = 0;
+
+      if (ENABLE_SERIAL_LOG) start_time = esp_timer_get_time();
 
       // Take the photo!
       esp_err_t err = take_photo(photo_name);
