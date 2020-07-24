@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#include "../lib/config.h"
+#include "config.h"
 
 void led_on() {
   digitalWrite(RED_LED_PIN, LOW);

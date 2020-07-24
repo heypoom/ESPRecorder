@@ -1,12 +1,12 @@
-#include "../lib/camera.h"
+#include "camera.h"
 
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <SD_MMC.h>
 
-#include "../lib/config.h"
-#include "../lib/notify_error.h"
+#include "config.h"
 #include "esp_camera.h"
+#include "notify_error.h"
 
 camera_config_t create_camera_config() {
   camera_config_t config;

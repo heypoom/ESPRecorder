@@ -6,11 +6,11 @@
 #include "esp_camera.h"
 
 // Config
-#include "../lib/camera.h"
-#include "../lib/config.h"
-#include "../lib/leds.h"
-#include "../lib/main.h"
-#include "../lib/notify_error.h"
+#include "camera.h"
+#include "config.h"
+#include "leds.h"
+#include "main.h"
+#include "notify_error.h"
 
 // SD Card
 #include <SD_MMC.h>

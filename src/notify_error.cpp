@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
-#include "../lib/config.h"
-#include "../lib/leds.h"
+#include "config.h"
+#include "leds.h"
 
 // Notify the human operator that an unrecoverable error exists.
 // This will last 5 seconds.
