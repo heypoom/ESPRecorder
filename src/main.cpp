@@ -56,6 +56,7 @@ void start_new_take() {
   TAKE_ID = EEPROM.read(0) + 1;
   EEPROM.write(0, TAKE_ID);
   EEPROM.commit();
+  FRAME_COUNT = 0;
 }
 
 // Continuously take the photo if IS_RECORDING flag is set.
@@ -75,10 +76,12 @@ void continuouslyTakePhotoTask(void *parameter) {
         // Nothing we can do.
       }
 
-      auto end_time = esp_timer_get_time();
-      auto capture_duration = ((int)(end_time / 1000) - (int)(start_time / 1000));
+      if (ENABLE_SERIAL_LOG) {
+        auto end_time = esp_timer_get_time();
+        auto capture_duration = ((int)(end_time / 1000) - (int)(start_time / 1000));
 
-      if (ENABLE_SERIAL_LOG) Serial.printf("Frame %d taken in %d ms\n", FRAME_COUNT, capture_duration);
+        Serial.printf("Frame %d taken in %d ms\n", FRAME_COUNT, capture_duration);
+      }
 
       led_off();
       FRAME_COUNT++;
