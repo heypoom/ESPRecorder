@@ -53,20 +53,20 @@ esp_err_t setup_camera() {
   esp_err_t err = esp_camera_init(&camera_config);
 
   if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
+    if (ENABLE_SERIAL_LOG) Serial.printf("Camera init failed with error 0x%x", err);
 
     return ESP_FAIL;
   }
 
   if (!SD_MMC.begin("/sdcard")) {
-    Serial.println("SD Card Mount Failed");
+    if (ENABLE_SERIAL_LOG) Serial.println("SD Card Mount Failed");
 
     return ESP_FAIL;
   }
 
   uint8_t cardType = SD_MMC.cardType();
   if (cardType == CARD_NONE) {
-    Serial.println("No SD Card attached");
+    if (ENABLE_SERIAL_LOG) Serial.println("No SD Card attached");
 
     return ESP_FAIL;
   }
@@ -86,7 +86,7 @@ esp_err_t take_photo(String file_name) {
   // Take a photo!
   frame_buffer = esp_camera_fb_get();
   if (!frame_buffer) {
-    Serial.println("Camera capture failed");
+    if (ENABLE_SERIAL_LOG) Serial.println("Camera capture failed");
 
     return ESP_FAIL;
   }

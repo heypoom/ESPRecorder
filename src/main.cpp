@@ -65,6 +65,7 @@ void continuouslyTakePhotoTask(void *parameter) {
       String photo_name = "take_" + String(TAKE_ID) + "_frame_" + String(FRAME_COUNT);
 
       flash_on();
+      led_on();
 
       auto start_time = esp_timer_get_time();
 
@@ -77,8 +78,9 @@ void continuouslyTakePhotoTask(void *parameter) {
       auto end_time = esp_timer_get_time();
       auto capture_duration = ((int)(end_time / 1000) - (int)(start_time / 1000));
 
-      Serial.printf("Frame %d taken in %d ms\n", FRAME_COUNT, capture_duration);
+      if (ENABLE_SERIAL_LOG) Serial.printf("Frame %d taken in %d ms\n", FRAME_COUNT, capture_duration);
 
+      led_off();
       FRAME_COUNT++;
     } else {
       vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -95,7 +97,7 @@ void create_photo_task() {
 }
 
 void setup() {
-  Serial.begin(115200);
+  if (ENABLE_SERIAL_LOG) Serial.begin(115200);
 
   // Initialize the take ID from EEPROM.
   EEPROM.begin(EEPROM_SIZE);
@@ -190,7 +192,10 @@ void read_gpio_signals() {
 }
 
 void loop() {
-  debug_simulate_signal_with_serial();
-  // read_gpio_signals();
+  if (ENABLE_SERIAL_LOG)
+    debug_simulate_signal_with_serial();
+  else
+    read_gpio_signals();
+
   delay(10);
 }
