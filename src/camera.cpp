@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "esp_camera.h"
+#include "globals.h"
 #include "notify_error.h"
 
 camera_config_t create_camera_config() {
@@ -80,47 +81,57 @@ esp_err_t setup_camera() {
   return ESP_OK;
 }
 
-camera_fb_t *FRAME_BUFFER = NULL;
-
 // Capture the frame.
 esp_err_t capture_frame() {
-  FRAME_BUFFER = esp_camera_fb_get();
+  camera_fb_t *frame_buffer = esp_camera_fb_get();
 
-  if (!FRAME_BUFFER) {
+  if (!frame_buffer) {
     if (ENABLE_SERIAL_LOG) Serial.println("Camera capture failed");
 
     return ESP_FAIL;
   }
 
+  framebuffer_queue[CAPTURED_FRAME_COUNT] = frame_buffer;
+  CAPTURED_FRAME_COUNT += 1;
+
   return ESP_OK;
 }
 
 // Save the frame to disk.
-esp_err_t save_frame(String file_name) {
-  // Path where new picture will be saved in SD Card
-  String path = "/" + file_name + ".jpg";
+esp_err_t save_frame() {
+  int captured = CAPTURED_FRAME_COUNT;
 
-  fs::FS &fs = SD_MMC;
-  File file = fs.open(path.c_str(), FILE_WRITE);
+  while (captured > PROCESSED_FRAME_COUNT) {
+    String file_name = "take_" + String(TAKE_ID) + "_frame_" + String(CAPTURED_FRAME_COUNT);
+    camera_fb_t *frame_buffer = framebuffer_queue[PROCESSED_FRAME_COUNT];
 
-  if (!file) {
+    // Path where new picture will be saved in SD Card
+    String path = "/" + file_name + ".jpg";
+
+    fs::FS &fs = SD_MMC;
+    File file = fs.open(path.c_str(), FILE_WRITE);
+
+    if (!file) {
+      file.close();
+      esp_camera_fb_return(frame_buffer);
+
+      return ESP_FAIL;
+    }
+
+    file.write(frame_buffer->buf, frame_buffer->len);
+
     file.close();
-    esp_camera_fb_return(FRAME_BUFFER);
+    esp_camera_fb_return(frame_buffer);
 
-    return ESP_FAIL;
+    PROCESSED_FRAME_COUNT += 1;
   }
-
-  file.write(FRAME_BUFFER->buf, FRAME_BUFFER->len);
-
-  file.close();
-  esp_camera_fb_return(FRAME_BUFFER);
 }
 
 // Take the photo.
-esp_err_t take_photo(String file_name) {
+esp_err_t take_photo() {
   esp_err_t err = capture_frame();
   if (err != ESP_OK) return err;
 
-  esp_err_t err = save_frame(file_name);
+  esp_err_t err = save_frame();
   if (err != ESP_OK) return err;
 }

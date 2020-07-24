@@ -7,6 +7,7 @@
 // Config
 #include "camera.h"
 #include "config.h"
+#include "globals.h"
 #include "leds.h"
 #include "main.h"
 #include "notify_error.h"
@@ -36,27 +37,19 @@
 #include "nvs_flash.h"
 #include "soc/cpu.h"
 
-// Global Variables!
-
 // Task handle.
 TaskHandle_t CameraTask;
 TaskHandle_t SaveFrameTask;
 
-// Are we recording?
-int IS_RECORDING = false;
-
-// ID to prevent collision in file name.
-int TAKE_ID = 0;
-
-// Which frame are we currently on?
-int FRAME_COUNT = 0;
-
-// Update the TAKE_ID.
 void start_new_take() {
+  // Update the TAKE_ID.
   TAKE_ID = EEPROM.read(0) + 1;
   EEPROM.write(0, TAKE_ID);
   EEPROM.commit();
-  FRAME_COUNT = 0;
+
+  // Reset the captured and processed frame.
+  CAPTURED_FRAME_COUNT = 0;
+  PROCESSED_FRAME_COUNT = 0;
 }
 
 // Continuously capture the frame if IS_RECORDING flag is set.
@@ -65,8 +58,6 @@ void captureFrameTask(void *parameter) {
     if (IS_RECORDING) {
       flash_on();
       esp_err_t err = capture_frame();
-
-      // FRAME_COUNT++;
     } else {
       vTaskDelay(10 / portTICK_PERIOD_MS);
     }
@@ -76,14 +67,13 @@ void captureFrameTask(void *parameter) {
 void saveFrameToDiskTask(void *parameter) {
   while (true) {
     if (IS_RECORDING) {
-      String photo_name = "take_" + String(TAKE_ID) + "_frame_" + String(FRAME_COUNT);
       led_on();
 
       auto start_time = 0;
       if (ENABLE_SERIAL_LOG) start_time = esp_timer_get_time();
 
       // From the current framebuffer, save the frame.
-      esp_err_t err = save_frame(photo_name);
+      esp_err_t err = save_frame();
       if (err != ESP_OK) {
         // Nothing we can do.
       }
@@ -92,11 +82,10 @@ void saveFrameToDiskTask(void *parameter) {
         auto end_time = esp_timer_get_time();
         auto capture_duration = ((int)(end_time / 1000) - (int)(start_time / 1000));
 
-        Serial.printf("Frame %d saved in %d ms\n", FRAME_COUNT, capture_duration);
+        Serial.printf("Frame %d saved in %d ms\n", PROCESSED_FRAME_COUNT, capture_duration);
       }
 
       led_off();
-      FRAME_COUNT++;
     } else {
       vTaskDelay(10 / portTICK_PERIOD_MS);
     }

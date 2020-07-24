@@ -27,4 +27,4 @@ esp_err_t setup_camera();
 
 esp_err_t take_photo(String file_name);
 esp_err_t capture_frame();
-esp_err_t save_frame(String file_name);
+esp_err_t save_frame();
