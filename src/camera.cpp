@@ -58,7 +58,7 @@ esp_err_t setup_camera() {
     return ESP_FAIL;
   }
 
-  if (!SD_MMC.begin("/sdcard", true)) {
+  if (!SD_MMC.begin("/sdcard")) {
     Serial.println("SD Card Mount Failed");
 
     return ESP_FAIL;

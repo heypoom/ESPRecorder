@@ -64,11 +64,20 @@ void continuouslyTakePhotoTask(void *parameter) {
     if (IS_RECORDING) {
       String photo_name = "take_" + String(TAKE_ID) + "_frame_" + String(FRAME_COUNT);
 
+      flash_on();
+
+      auto start_time = esp_timer_get_time();
+
       // Take the photo!
       esp_err_t err = take_photo(photo_name);
       if (err != ESP_OK) {
         // Nothing we can do.
       }
+
+      auto end_time = esp_timer_get_time();
+      auto capture_duration = ((int)(end_time / 1000) - (int)(start_time / 1000));
+
+      Serial.printf("Frame %d taken in %d ms\n", FRAME_COUNT, capture_duration);
 
       FRAME_COUNT++;
     } else {
@@ -131,23 +140,21 @@ void start_recording() {
 
   start_new_take();
 
+  notify_status_blink();
   flash_on();
   led_on();
 
   IS_RECORDING = true;
-
-  notify_status_blink();
 }
 
 void stop_recording() {
   if (!IS_RECORDING) return;
 
-  flash_off();
-  led_off();
-
   IS_RECORDING = false;
+  flash_off();
 
   notify_status_blink();
+  led_off();
 }
 
 void debug_simulate_signal_with_serial() {
