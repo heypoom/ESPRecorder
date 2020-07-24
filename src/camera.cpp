@@ -80,17 +80,23 @@ esp_err_t setup_camera() {
   return ESP_OK;
 }
 
-esp_err_t take_photo(String file_name) {
-  camera_fb_t *frame_buffer = NULL;
+camera_fb_t *FRAME_BUFFER = NULL;
 
-  // Take a photo!
-  frame_buffer = esp_camera_fb_get();
-  if (!frame_buffer) {
+// Capture the frame.
+esp_err_t capture_frame() {
+  FRAME_BUFFER = esp_camera_fb_get();
+
+  if (!FRAME_BUFFER) {
     if (ENABLE_SERIAL_LOG) Serial.println("Camera capture failed");
 
     return ESP_FAIL;
   }
 
+  return ESP_OK;
+}
+
+// Save the frame to disk.
+esp_err_t save_frame(String file_name) {
   // Path where new picture will be saved in SD Card
   String path = "/" + file_name + ".jpg";
 
@@ -99,15 +105,22 @@ esp_err_t take_photo(String file_name) {
 
   if (!file) {
     file.close();
-    esp_camera_fb_return(frame_buffer);
+    esp_camera_fb_return(FRAME_BUFFER);
 
     return ESP_FAIL;
   }
 
-  file.write(frame_buffer->buf, frame_buffer->len);
+  file.write(FRAME_BUFFER->buf, FRAME_BUFFER->len);
 
   file.close();
-  esp_camera_fb_return(frame_buffer);
+  esp_camera_fb_return(FRAME_BUFFER);
+}
 
-  return ESP_OK;
+// Take the photo.
+esp_err_t take_photo(String file_name) {
+  esp_err_t err = capture_frame();
+  if (err != ESP_OK) return err;
+
+  esp_err_t err = save_frame(file_name);
+  if (err != ESP_OK) return err;
 }

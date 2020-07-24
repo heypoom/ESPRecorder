@@ -2,7 +2,6 @@
 #include <EEPROM.h>
 
 // Camera
-
 #include "esp_camera.h"
 
 // Config
